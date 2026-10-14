@@ -39,16 +39,37 @@ The domain uses four conventional ActiveRecord models:
 - `JournalEntry` belongs to a client and has required freeform text content.
 
 All tables use Rails timestamps. Foreign keys are non-null and use `ON DELETE
-CASCADE`. The parent ActiveRecord associations also use `dependent: :destroy` so
-ordinary application deletion runs through Rails while direct database deletion
-cannot leave orphaned rows. Client journal entries are deleted with their client;
-enrollments are deleted with either participant.
+RESTRICT`. Providers and clients restrict deletion when enrollments exist, and
+clients also restrict deletion when journal entries exist, using
+`dependent: :restrict_with_exception`. Database foreign keys enforce the same
+protection for direct deletes. This preserves relationship history and client-owned
+journal entries after a relationship ends or a participant becomes inactive.
 
-`enrollments` has a unique composite index on `[provider_id, client_id]`, backed
-by a matching ActiveRecord uniqueness validation, so the same relationship cannot
-be recorded twice. Its string-backed enum keeps plan values readable in the
-database, while a PostgreSQL check constraint allows only `basic` and `premium`,
-including when writes bypass ActiveRecord.
+Enrollments have a required `started_at` (defaulting to the current time for new
+ActiveRecord objects) and nullable `ended_at`. Existing start times are backfilled
+from `created_at`. End a relationship with `enrollment.update!(ended_at: Time.current)`;
+the enrollment and both participants remain stored. An end cannot precede its start.
+`Enrollment.active` and `active?` identify records with no end timestamp.
+
+A provider/client pair may have multiple historical enrollments. A PostgreSQL
+partial unique index on `[provider_id, client_id] WHERE ended_at IS NULL` permits
+that history while enforcing at most one active enrollment, including concurrent
+writes and writes bypassing validation. The matching conditional ActiveRecord
+validation provides ordinary validation errors. A separate provider index supports
+lookups across all history. The string-backed plan enum and database check
+constraint retain the allowed `basic` and `premium` values.
+
+Providers and clients have nullable `deactivated_at` timestamps and an `active`
+scope. Participant status is separate from enrollment status: a client may end one
+provider relationship while retaining another, and deactivation does not implicitly
+end enrollments. Through-associations include historical relationships.
+
+Historical record retention does not grant authorization to access those records.
+Neither an enrollment association nor its active status implements an access policy;
+authorization is outside this exercise. Actual healthcare retention requirements
+and deletion policies are also outside scope. There is no soft-deletion framework
+or retention service. The history migration deliberately refuses rollback because
+the original pair uniqueness cannot represent multiple historical enrollments.
 
 ## ActiveRecord queries
 
