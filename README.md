@@ -75,6 +75,9 @@ jobs, realtime features, and deployment tooling were skipped.
 
 The domain includes providers, clients, enrollments, and client-owned journal
 entries. Enrollments connect providers and clients with a `basic` or `premium`
-plan; a provider/client pair is unique. See
+plan. Enrollments preserve relationship history using start/end timestamps, with
+only one active enrollment per provider/client pair. Providers and clients can be
+deactivated, and restrictive associations and foreign keys protect enrollments and
+journal entries from accidental parent deletion. See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the complete schema and design
 rationale, and [AGENTS.md](AGENTS.md) for development guidance.

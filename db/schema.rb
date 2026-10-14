@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_000300) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_14_000400) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -19,6 +19,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_000300) do
     t.string "email", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "deactivated_at"
   end
 
   create_table "enrollments", force: :cascade do |t|
@@ -27,9 +28,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_000300) do
     t.string "plan", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "started_at", null: false
+    t.datetime "ended_at"
     t.index ["client_id"], name: "index_enrollments_on_client_id"
-    t.index ["provider_id", "client_id"], name: "index_enrollments_on_provider_id_and_client_id", unique: true
-    t.check_constraint "plan::text = ANY (ARRAY['basic'::character varying, 'premium'::character varying]::text[])", name: "enrollments_plan_check"
+    t.index ["provider_id", "client_id"], name: "index_enrollments_on_active_pair", unique: true, where: "(ended_at IS NULL)"
+    t.index ["provider_id"], name: "index_enrollments_on_provider_id"
+    t.check_constraint "plan::text = ANY (ARRAY['basic'::character varying::text, 'premium'::character varying::text])", name: "enrollments_plan_check"
   end
 
   create_table "journal_entries", force: :cascade do |t|
@@ -45,9 +49,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_000300) do
     t.string "email", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "deactivated_at"
   end
 
-  add_foreign_key "enrollments", "clients", on_delete: :cascade
-  add_foreign_key "enrollments", "providers", on_delete: :cascade
-  add_foreign_key "journal_entries", "clients", on_delete: :cascade
+  add_foreign_key "enrollments", "clients", on_delete: :restrict
+  add_foreign_key "enrollments", "providers", on_delete: :restrict
+  add_foreign_key "journal_entries", "clients", on_delete: :restrict
 end
