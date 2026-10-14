@@ -2,7 +2,7 @@
 
 A minimal Rails foundation for Healthie full-stack engineering pairing interview
 preparation. It provides ActiveRecord, PostgreSQL, Minitest, and the interview's
-core domain schema. No seed data, application endpoints, or query methods exist yet.
+core domain schema and query methods. No seed data or application endpoints exist yet.
 
 ## Prerequisites
 
@@ -78,3 +78,27 @@ entries. Enrollments connect providers and clients with a `basic` or `premium`
 plan; a provider/client pair is unique. See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the complete schema and design
 rationale, and [AGENTS.md](AGENTS.md) for development guidance.
+
+## ActiveRecord query examples
+
+In `bin/rails console`, load records and use their associations directly:
+
+```ruby
+provider = Provider.find(provider_id)
+client = Client.find(client_id)
+
+# All clients for a provider
+provider.clients
+
+# All providers for a client
+client.providers
+
+# A client's entries, oldest first; id breaks equal-timestamp ties
+client.journal_entries.chronological
+
+# All enrolled clients' entries for a provider, oldest first and de-duplicated
+provider.journal_entries.chronological
+
+# The provider's entries for one particular enrolled client
+provider.journal_entries.where(client: client).chronological
+```
