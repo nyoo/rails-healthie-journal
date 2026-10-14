@@ -1,0 +1,25 @@
+# Local PostgreSQL uses the current OS username unless PGUSER is set.
+# PGUSER, PGPASSWORD, and PGPORT can be supplied through the shell.
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+
+development:
+  <<: *default
+  database: rails_healthie_journal_development
+  host: localhost
+
+# Keep tests isolated: Rails may recreate the test database.
+test:
+  <<: *default
+  database: rails_healthie_journal_test
+  host: localhost
+
+# Generated Rails production defaults; no deployment setup is included.
+# DATABASE_URL can also supply connection settings without committing secrets.
+production:
+  <<: *default
+  database: rails_healthie_journal_production
+  username: rails_healthie_journal
+  password: <%= ENV["RAILS_HEALTHIE_JOURNAL_DATABASE_PASSWORD"] %>
