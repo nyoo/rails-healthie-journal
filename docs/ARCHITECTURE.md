@@ -71,23 +71,41 @@ and deletion policies are also outside scope. There is no soft-deletion framewor
 or retention service. The history migration deliberately refuses rollback because
 the original pair uniqueness cannot represent multiple historical enrollments.
 
+## Production considerations
+
+Healthcare retention periods, legal holds, and a client's deletion request need a
+policy-driven workflow rather than ad hoc record deletion; that workflow may retain
+some records while deleting or de-identifying others. Access to current and
+historical health data needs authorization based on the actor and relationship, and
+auditable access/change logs and privacy controls would be required. At larger
+volumes, paginate journal-entry result sets and measure query plans before adding
+indexes beyond the current foreign-key and active-pair indexes. Plan changes are
+currently represented by ending one enrollment and beginning another. If future
+rules allow overlapping enrollment periods, add explicit date-range constraints and
+decide which relationship controls access.
+
 ## ActiveRecord queries
 
 The required queries use explicit current-relationship associations alongside the
 existing historical associations:
 
 - `provider.current_clients` joins through `active_enrollments`, which applies
-  `ended_at IS NULL`. `provider.clients` remains available for all history.
+  `ended_at IS NULL`. `provider.clients` returns each historically related client
+  once; `provider.enrollments` retains the individual enrollment records.
 - `client.current_providers` applies the same filter in the inverse direction;
-  `client.providers` remains historical.
+  `client.providers` returns each historically related provider once, while
+  `client.enrollments` retains individual relationship periods.
 - `client.journal_entries.recent_first` filters by the `journal_entries.client_id`
   foreign key and therefore includes entries even when the client has no active
   enrollments.
 - `provider.current_client_journal_entries.recent_first` joins through current
-  clients only, applies `DISTINCT`, and returns entries for clients currently
-  enrolled with that provider. It does not restrict entries to the dates of an
-  enrollment: an entry created before, during, or after an active enrollment is
-  included as long as the client is currently enrolled.
+  clients only and returns entries for clients currently enrolled with that
+  provider. The partial unique index guarantees at most one active join row for
+  each provider/client pair, so entries are not duplicated without adding
+  `DISTINCT`; that also keeps later `pluck` or `select` calls composable with the
+  ordering scope. It does not restrict entries to the dates of an enrollment: an
+  entry created before, during, or after an active enrollment is included as long
+  as the client is currently enrolled.
 
 `JournalEntry.recent_first` orders by `created_at DESC, id DESC`. The schema has no
 separate entry-date field, so `created_at` is the journal-entry date for this

@@ -125,7 +125,7 @@ alice.current_providers
 # A client's entries, including entries after enrollments end; newest first
 carol.journal_entries.recent_first
 
-# Entries for a provider's currently enrolled clients, newest first and de-duplicated
+# Entries for a provider's currently enrolled clients, newest first
 kaiser.current_client_journal_entries.recent_first
 
 # Historical enrollment queries: Bob's first Kaiser enrollment is ended and his later one is active
@@ -140,4 +140,14 @@ carol.journal_entries.recent_first
 `current_clients` and `current_providers` use only enrollments where `ended_at`
 is `nil`. Journal entries are client-owned, so ending an enrollment never removes
 or filters the client's entries. The provider journal-entry query includes entries
-for a client only while that client is currently enrolled with that provider.
+for a client only while that client is currently enrolled with that provider. The
+active-enrollment unique index guarantees one join row per provider/client pair,
+so the query has no duplicate entries without an association-level `DISTINCT`.
+
+## Known limitations
+
+This is a pairing-exercise foundation: it has no endpoints, authentication, or
+authorization policy. It intentionally does not implement healthcare retention or
+deletion workflows, audit logging, pagination, background processing, or production
+performance tuning. Historical enrollment records are preserved, but access to
+historical journal data must be authorized by a future application layer.

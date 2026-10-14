@@ -72,8 +72,7 @@ class ActiveRecordQueriesTest < ActiveSupport::TestCase
     entries = provider.current_client_journal_entries.recent_first
 
     assert_equal [ later, second, first ], entries.to_a
-    assert_equal entries.count, entries.distinct.count
-    assert_match(/SELECT DISTINCT/, entries.to_sql)
+    assert_equal entries.count, entries.pluck(:id).uniq.count
     assert_respond_to entries, :where
   end
 
@@ -87,6 +86,19 @@ class ActiveRecordQueriesTest < ActiveSupport::TestCase
 
     assert_equal [ entry ], provider.current_client_journal_entries.to_a
     assert_equal 1, provider.current_client_journal_entries.count
+  end
+
+  test "historical relationship associations return each participant once" do
+    provider = create_provider("Kaiser Permanente")
+    client = create_client("Avery")
+
+    enroll(provider, client, ended_at: 1.day.ago)
+    enroll(provider, client)
+
+    assert_equal [ client ], provider.clients.to_a
+    assert_equal [ provider ], client.providers.to_a
+    assert_match(/SELECT DISTINCT/, provider.clients.to_sql)
+    assert_match(/SELECT DISTINCT/, client.providers.to_sql)
   end
 
   private
