@@ -1,8 +1,9 @@
 # Rails Healthie Journal
 
 A minimal Rails foundation for Healthie full-stack engineering pairing interview
-preparation. It provides ActiveRecord, PostgreSQL, Minitest, and the interview's
-core domain schema and query methods. No seed data or application endpoints exist yet.
+preparation. It provides ActiveRecord, PostgreSQL, Minitest, the interview's core
+domain schema and query methods, and a small deterministic development dataset.
+No application endpoints exist yet.
 
 ## Prerequisites
 
@@ -60,8 +61,7 @@ curl --fail http://localhost:3000/up
 ```
 
 There is no application root route. `/up` checks application boot, not database
-connectivity. The Minitest harness is ready; there are currently no application
-tests because no domain behavior has been implemented.
+connectivity.
 
 If port 3000 is occupied, run `bin/rails server -p 3001` and check
 `http://localhost:3001/up`. The initial bootstrap was verified on port 3001.
@@ -82,35 +82,62 @@ journal entries from accidental parent deletion. See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the complete schema and design
 rationale, and [AGENTS.md](AGENTS.md) for development guidance.
 
+## Seed data
+
+Load the deterministic development dataset with:
+
+```sh
+bin/rails db:seed
+```
+
+It is safe to run the command again. Providers and clients are found by their
+`@example.test` email addresses; enrollments are identified by provider, client,
+and start time so historical relationships remain distinct; journal entries are
+identified by client, content, and timestamp. Seeds do not delete or modify
+existing application data.
+
+The dataset contains Kaiser Permanente, Mayo Clinic, and Cleveland Clinic; five
+clients; both plans; active and ended enrollments; and journal entries spanning
+the relationship history. Alice Nguyen is active with both Kaiser and Mayo. Bob
+Martinez has an ended Kaiser enrollment followed by a newer active enrollment.
+Carol Johnson has no active providers but retains entries from before and after
+her Cleveland enrollment ended. Erin Patel has an active Cleveland enrollment
+and is deactivated to demonstrate that participant status is separate from
+enrollment status.
+
 ## ActiveRecord query examples
 
-In `bin/rails console`, load records and use their associations directly:
+After seeding, in `bin/rails console`, load the named records and use the
+existing associations directly:
 
 ```ruby
-provider = Provider.find(provider_id)
-client = Client.find(client_id)
+kaiser = Provider.find_by!(email: "kaiser@example.test")
+alice = Client.find_by!(email: "alice.nguyen@example.test")
+bob = Client.find_by!(email: "bob.martinez@example.test")
+carol = Client.find_by!(email: "carol.johnson@example.test")
 
 # All current clients for a provider (active enrollment only)
-provider.current_clients
-
-# All clients ever associated with a provider, including ended enrollments
-provider.clients
+kaiser.current_clients
 
 # All current providers for a client (active enrollment only)
-client.current_providers
-
-# All providers ever associated with a client, including ended enrollments
-client.providers
+alice.current_providers
 
 # A client's entries, including entries after enrollments end; newest first
-client.journal_entries.recent_first
+carol.journal_entries.recent_first
 
 # Entries for a provider's currently enrolled clients, newest first and de-duplicated
-provider.current_client_journal_entries.recent_first
+kaiser.current_client_journal_entries.recent_first
 
-# Enrollment history remains directly queryable
-provider.enrollments
-client.enrollments
-Enrollment.where(provider: provider, client: client)
-Enrollment.where.not(ended_at: nil)
+# Historical enrollment queries: Bob's first Kaiser enrollment is ended and his later one is active
+Enrollment.where(provider: kaiser, client: bob).order(:started_at)
+Enrollment.where(provider: kaiser, client: bob).where.not(ended_at: nil)
+
+# Carol's entries remain available despite having no current provider relationship
+carol.current_providers # => []
+carol.journal_entries.recent_first
 ```
+
+`current_clients` and `current_providers` use only enrollments where `ended_at`
+is `nil`. Journal entries are client-owned, so ending an enrollment never removes
+or filters the client's entries. The provider journal-entry query includes entries
+for a client only while that client is currently enrolled with that provider.

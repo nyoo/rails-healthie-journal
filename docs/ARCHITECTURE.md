@@ -110,8 +110,15 @@ enrollment partial index already serves the current relationship lookup. Paginat
 would also become relevant for application responses. Those production optimizations
 are intentionally outside this exercise.
 
-## Scope
+## Development seed data and scope
 
-The project intentionally does not yet include seed data, controllers, or endpoints.
-Mail, file storage, background jobs, realtime features, frontend frameworks, and
-deployment tooling remain out of scope for this exercise.
+`db/seeds.rb` provides a small deterministic development dataset for explaining
+the associations and lifecycle-aware queries in a pairing interview. It finds
+participants by stable sample email addresses, historical enrollments by their
+provider, client, and start time, and journal entries by client, content, and
+timestamp. Re-running it preserves historical rows and does not delete existing
+application data.
+
+Controllers and endpoints remain out of scope. Mail, file storage, background
+jobs, realtime features, frontend frameworks, and deployment tooling also remain
+out of scope for this exercise.
