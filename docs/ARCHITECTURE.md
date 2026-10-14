@@ -26,14 +26,33 @@ local PostgreSQL role and separate databases:
 be supplied through standard PostgreSQL environment variables. Production database
 configuration remains the generated Rails default.
 
-## Scope and planned work
+## Domain schema
 
-The foundation intentionally has no domain models, migrations, validations,
-queries, or seed data. Mail, file storage, background jobs, realtime features,
-frontend frameworks, and deployment tooling are omitted because they do not
-support the current exercise.
+The domain uses four conventional ActiveRecord models:
 
-Subsequent PRs may introduce Provider, Client, Enrollment, and JournalEntry models,
-their relationships, validations, and queries as requirements are explicitly
-provided. These are planned concepts, not implemented components. Add focused
-tests alongside that behavior and update this document as architecture changes.
+- `Provider` has a required name and email, many enrollments, and many clients
+  through enrollments.
+- `Client` has a required name and email, many enrollments, many providers through
+  enrollments, and many journal entries.
+- `Enrollment` belongs to a provider and client and has a required `plan` of
+  `basic` or `premium`.
+- `JournalEntry` belongs to a client and has required freeform text content.
+
+All tables use Rails timestamps. Foreign keys are non-null and use `ON DELETE
+CASCADE`. The parent ActiveRecord associations also use `dependent: :destroy` so
+ordinary application deletion runs through Rails while direct database deletion
+cannot leave orphaned rows. Client journal entries are deleted with their client;
+enrollments are deleted with either participant.
+
+`enrollments` has a unique composite index on `[provider_id, client_id]`, backed
+by a matching ActiveRecord uniqueness validation, so the same relationship cannot
+be recorded twice. Its string-backed enum keeps plan values readable in the
+database, while a PostgreSQL check constraint allows only `basic` and `premium`,
+including when writes bypass ActiveRecord.
+
+## Scope
+
+The project intentionally does not yet include seed data, controllers, endpoints,
+or the interview query methods. Mail, file storage, background jobs, realtime
+features, frontend frameworks, and deployment tooling remain out of scope for this
+exercise.
