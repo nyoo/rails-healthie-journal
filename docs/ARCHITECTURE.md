@@ -73,26 +73,40 @@ the original pair uniqueness cannot represent multiple historical enrollments.
 
 ## ActiveRecord queries
 
-The required queries are exposed through the existing model associations:
+The required queries use explicit current-relationship associations alongside the
+existing historical associations:
 
-- `provider.clients` joins `providers` to `clients` through `enrollments`.
-- `client.providers` uses the inverse join through `enrollments`.
-- `client.journal_entries.chronological` filters by the `journal_entries.client_id`
-  foreign key.
-- `provider.journal_entries.chronological` joins providers through enrollments and
-  clients to journal entries. The provider association applies `DISTINCT` so each
-  journal entry appears once even if the join would otherwise produce duplicates.
+- `provider.current_clients` joins through `active_enrollments`, which applies
+  `ended_at IS NULL`. `provider.clients` remains available for all history.
+- `client.current_providers` applies the same filter in the inverse direction;
+  `client.providers` remains historical.
+- `client.journal_entries.recent_first` filters by the `journal_entries.client_id`
+  foreign key and therefore includes entries even when the client has no active
+  enrollments.
+- `provider.current_client_journal_entries.recent_first` joins through current
+  clients only, applies `DISTINCT`, and returns entries for clients currently
+  enrolled with that provider. It does not restrict entries to the dates of an
+  enrollment: an entry created before, during, or after an active enrollment is
+  included as long as the client is currently enrolled.
 
-`JournalEntry.chronological` orders by `created_at ASC, id ASC`. The schema has no
+`JournalEntry.recent_first` orders by `created_at DESC, id DESC`. The schema has no
 separate entry-date field, so `created_at` is the journal-entry date for this
 exercise. Ordering by the primary key makes results deterministic when timestamps
-are equal. The scope returns a relation, so callers can further compose conditions,
-such as `provider.journal_entries.where(client: client).chronological`.
+are equal. These associations and scope return relations, so callers can compose
+additional conditions.
+
+The current-relationship queries deliberately do not apply the provider or client
+`active` scopes. Enrollment lifecycle and participant deactivation are separate
+concepts, and this exercise defines "current" as an enrollment with no `ended_at`.
+Historical relationships remain straightforward to inspect with
+`provider.enrollments`, `client.enrollments`, `Enrollment.where(provider:, client:)`,
+and `Enrollment.where.not(ended_at: nil)`.
 
 The existing foreign-key indexes support the direct client-entry lookup and the
 enrollment joins. For a much larger dataset, the query shape remains useful but a
 composite index tailored to the final access pattern (for example,
-`journal_entries(client_id, created_at, id)`) could reduce sorting work. Pagination
+`journal_entries(client_id, created_at, id)`) could reduce sorting work; the active
+enrollment partial index already serves the current relationship lookup. Pagination
 would also become relevant for application responses. Those production optimizations
 are intentionally outside this exercise.
 

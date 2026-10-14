@@ -135,7 +135,7 @@ class DomainModelsTest < ActiveSupport::TestCase
   private
 
   def create_provider
-    Provider.create!(name: "Dr. Rivera", email: "rivera-#{SecureRandom.uuid}@example.com")
+    Provider.create!(name: "Kaiser Permanente", email: "kaiser-#{SecureRandom.uuid}@example.com")
   end
 
   def create_client

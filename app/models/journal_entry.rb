@@ -1,7 +1,7 @@
 class JournalEntry < ApplicationRecord
   belongs_to :client
 
-  scope :chronological, -> { order(created_at: :asc, id: :asc) }
+  scope :recent_first, -> { order(created_at: :desc, id: :desc) }
 
   validates :content, presence: true
 end
