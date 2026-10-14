@@ -1,8 +1,8 @@
 # Rails Healthie Journal
 
 A minimal Rails foundation for Healthie full-stack engineering pairing interview
-preparation. This first increment provides ActiveRecord, PostgreSQL, and Minitest.
-No domain models, migrations, seed data, or application endpoints exist yet.
+preparation. It provides ActiveRecord, PostgreSQL, Minitest, and the interview's
+core domain schema. No seed data, application endpoints, or query methods exist yet.
 
 ## Prerequisites
 
@@ -73,6 +73,8 @@ middleware while retaining conventional Rails and ActiveRecord structure.
 Browser UI work would require adding that support later. Unused mail, storage,
 jobs, realtime features, and deployment tooling were skipped.
 
-Future focused PRs will introduce the interview's domain models, relationships,
-validations, and queries when requested. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-for current architecture and [AGENTS.md](AGENTS.md) for development guidance.
+The domain includes providers, clients, enrollments, and client-owned journal
+entries. Enrollments connect providers and clients with a `basic` or `premium`
+plan; a provider/client pair is unique. See
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the complete schema and design
+rationale, and [AGENTS.md](AGENTS.md) for development guidance.
