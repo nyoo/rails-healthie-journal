@@ -1,64 +1,92 @@
 require "test_helper"
 
 class ActiveRecordQueriesTest < ActiveSupport::TestCase
-  test "provider clients and client providers follow enrollments" do
+  test "provider current clients include multiple active clients" do
     provider = create_provider("Rivera")
-    another_provider = create_provider("Chen")
     client = create_client("Avery")
     another_client = create_client("Jordan")
 
     enroll(provider, client)
     enroll(provider, another_client)
-    enroll(another_provider, client)
 
-    assert_equal [ client, another_client ], provider.clients.order(:id).to_a
-    assert_equal [ provider, another_provider ], client.providers.order(:id).to_a
+    assert_equal [ client, another_client ], provider.current_clients.order(:id).to_a
+    assert_respond_to provider.current_clients, :where
   end
 
-  test "client journal entries are returned in chronological order with an id tie breaker" do
+  test "ended enrollments are historical and excluded from provider current clients" do
+    provider = create_provider("Rivera")
+    current_client = create_client("Avery")
+    former_client = create_client("Jordan")
+
+    enroll(provider, current_client)
+    enroll(provider, former_client, ended_at: Time.current)
+
+    assert_equal [ current_client ], provider.current_clients.to_a
+    assert_equal [ current_client, former_client ], provider.clients.order(:id).to_a
+    assert_equal [ former_client ], provider.enrollments.where.not(ended_at: nil).map(&:client)
+  end
+
+  test "client current providers include multiple active providers and exclude historical ones" do
     client = create_client("Avery")
+    first_provider = create_provider("Rivera")
+    second_provider = create_provider("Chen")
+    former_provider = create_provider("Patel")
+
+    enroll(first_provider, client)
+    enroll(second_provider, client)
+    enroll(former_provider, client, ended_at: Time.current)
+
+    assert_equal [ first_provider, second_provider ], client.current_providers.order(:id).to_a
+    assert_equal [ first_provider, second_provider, former_provider ], client.providers.order(:id).to_a
+  end
+
+  test "client journal entries remain available without active enrollments and order recent first" do
+    client = create_client("Avery")
+    provider = create_provider("Rivera")
     timestamp = Time.zone.parse("2026-10-14 09:00:00")
     later = create_entry(client, "later", timestamp + 1.day)
     first = create_entry(client, "first", timestamp)
     second = create_entry(client, "second", timestamp)
+    enroll(provider, client, ended_at: Time.current)
 
-    assert_equal [ first, second, later ], client.journal_entries.chronological.to_a
+    assert_equal [ later, second, first ], client.journal_entries.recent_first.to_a
+    assert_empty client.current_providers
   end
 
-  test "provider journal entries include every enrolled client once and are chronological" do
+  test "provider current-client journal entries exclude former clients and are distinct" do
     provider = create_provider("Rivera")
-    another_provider = create_provider("Chen")
     first_client = create_client("Avery")
     second_client = create_client("Jordan")
+    former_client = create_client("Taylor")
     timestamp = Time.zone.parse("2026-10-14 09:00:00")
 
     enroll(provider, first_client)
     enroll(provider, second_client)
-    enroll(another_provider, first_client)
+    enroll(provider, former_client, ended_at: Time.current)
 
     later = create_entry(second_client, "later", timestamp + 1.day)
     first = create_entry(first_client, "first", timestamp)
     second = create_entry(second_client, "second", timestamp)
-    create_entry(create_client("Unenrolled"), "not included", timestamp - 1.day)
+    create_entry(former_client, "former", timestamp + 2.days)
 
-    entries = provider.journal_entries.chronological
+    entries = provider.current_client_journal_entries.recent_first
 
-    assert_equal [ first, second, later ], entries.to_a
+    assert_equal [ later, second, first ], entries.to_a
     assert_equal entries.count, entries.distinct.count
     assert_match(/SELECT DISTINCT/, entries.to_sql)
+    assert_respond_to entries, :where
   end
 
-  test "provider journal entries can be limited to one associated client" do
+  test "a new active enrollment after history does not duplicate provider journal entries" do
     provider = create_provider("Rivera")
     client = create_client("Avery")
-    other_client = create_client("Jordan")
 
+    enroll(provider, client, ended_at: 1.day.ago)
     enroll(provider, client)
-    enroll(provider, other_client)
     entry = create_entry(client, "for Avery", Time.zone.parse("2026-10-14 09:00:00"))
-    create_entry(other_client, "for Jordan", Time.zone.parse("2026-10-14 10:00:00"))
 
-    assert_equal [ entry ], provider.journal_entries.where(client:).chronological.to_a
+    assert_equal [ entry ], provider.current_client_journal_entries.to_a
+    assert_equal 1, provider.current_client_journal_entries.count
   end
 
   private
@@ -71,8 +99,8 @@ class ActiveRecordQueriesTest < ActiveSupport::TestCase
     Client.create!(name:, email: "#{name.downcase}-#{SecureRandom.uuid}@example.com")
   end
 
-  def enroll(provider, client)
-    Enrollment.create!(provider:, client:, plan: :basic)
+  def enroll(provider, client, ended_at: nil)
+    Enrollment.create!(provider:, client:, plan: :basic, started_at: ended_at ? ended_at - 1.day : Time.current, ended_at:)
   end
 
   def create_entry(client, content, created_at)

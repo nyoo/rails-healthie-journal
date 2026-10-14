@@ -90,18 +90,27 @@ In `bin/rails console`, load records and use their associations directly:
 provider = Provider.find(provider_id)
 client = Client.find(client_id)
 
-# All clients for a provider
+# All current clients for a provider (active enrollment only)
+provider.current_clients
+
+# All clients ever associated with a provider, including ended enrollments
 provider.clients
 
-# All providers for a client
+# All current providers for a client (active enrollment only)
+client.current_providers
+
+# All providers ever associated with a client, including ended enrollments
 client.providers
 
-# A client's entries, oldest first; id breaks equal-timestamp ties
-client.journal_entries.chronological
+# A client's entries, including entries after enrollments end; newest first
+client.journal_entries.recent_first
 
-# All enrolled clients' entries for a provider, oldest first and de-duplicated
-provider.journal_entries.chronological
+# Entries for a provider's currently enrolled clients, newest first and de-duplicated
+provider.current_client_journal_entries.recent_first
 
-# The provider's entries for one particular enrolled client
-provider.journal_entries.where(client: client).chronological
+# Enrollment history remains directly queryable
+provider.enrollments
+client.enrollments
+Enrollment.where(provider: provider, client: client)
+Enrollment.where.not(ended_at: nil)
 ```
