@@ -2,7 +2,7 @@ require "test_helper"
 
 class ActiveRecordQueriesTest < ActiveSupport::TestCase
   test "provider current clients include multiple active clients" do
-    provider = create_provider("Rivera")
+    provider = create_provider("Kaiser Permanente")
     client = create_client("Avery")
     another_client = create_client("Jordan")
 
@@ -14,7 +14,7 @@ class ActiveRecordQueriesTest < ActiveSupport::TestCase
   end
 
   test "ended enrollments are historical and excluded from provider current clients" do
-    provider = create_provider("Rivera")
+    provider = create_provider("Kaiser Permanente")
     current_client = create_client("Avery")
     former_client = create_client("Jordan")
 
@@ -28,9 +28,9 @@ class ActiveRecordQueriesTest < ActiveSupport::TestCase
 
   test "client current providers include multiple active providers and exclude historical ones" do
     client = create_client("Avery")
-    first_provider = create_provider("Rivera")
-    second_provider = create_provider("Chen")
-    former_provider = create_provider("Patel")
+    first_provider = create_provider("Kaiser Permanente")
+    second_provider = create_provider("Mayo Clinic")
+    former_provider = create_provider("Cleveland Clinic")
 
     enroll(first_provider, client)
     enroll(second_provider, client)
@@ -42,7 +42,7 @@ class ActiveRecordQueriesTest < ActiveSupport::TestCase
 
   test "client journal entries remain available without active enrollments and order recent first" do
     client = create_client("Avery")
-    provider = create_provider("Rivera")
+    provider = create_provider("Kaiser Permanente")
     timestamp = Time.zone.parse("2026-10-14 09:00:00")
     later = create_entry(client, "later", timestamp + 1.day)
     first = create_entry(client, "first", timestamp)
@@ -54,7 +54,7 @@ class ActiveRecordQueriesTest < ActiveSupport::TestCase
   end
 
   test "provider current-client journal entries exclude former clients and are distinct" do
-    provider = create_provider("Rivera")
+    provider = create_provider("Kaiser Permanente")
     first_client = create_client("Avery")
     second_client = create_client("Jordan")
     former_client = create_client("Taylor")
@@ -78,7 +78,7 @@ class ActiveRecordQueriesTest < ActiveSupport::TestCase
   end
 
   test "a new active enrollment after history does not duplicate provider journal entries" do
-    provider = create_provider("Rivera")
+    provider = create_provider("Kaiser Permanente")
     client = create_client("Avery")
 
     enroll(provider, client, ended_at: 1.day.ago)
@@ -92,7 +92,7 @@ class ActiveRecordQueriesTest < ActiveSupport::TestCase
   private
 
   def create_provider(name)
-    Provider.create!(name:, email: "#{name.downcase}-#{SecureRandom.uuid}@example.com")
+    Provider.create!(name:, email: "#{name.parameterize}-#{SecureRandom.uuid}@example.com")
   end
 
   def create_client(name)
