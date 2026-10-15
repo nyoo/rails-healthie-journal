@@ -5,6 +5,8 @@ preparation. It provides ActiveRecord, PostgreSQL, Minitest, the interview's cor
 domain schema and query methods, a small deterministic development dataset, and a
 read-only browser explorer for demonstrating the model relationships.
 
+![Healthie Journal Explorer homepage showing the providers list](docs/images/homepage.jpg)
+
 ## Prerequisites
 
 - Ruby 3.4.11 (recorded in `.ruby-version`; use your existing Ruby version manager).
@@ -67,23 +69,6 @@ connectivity.
 
 If port 3000 is occupied, run `bin/rails server -p 3001` and check
 `http://localhost:3001/up`. The initial bootstrap was verified on port 3001.
-
-## Architecture and next steps
-
-The application uses conventional Rails controller and view support for the
-read-only explorer while retaining conventional ActiveRecord structure. The small
-amount of explorer CSS lives in the application layout, so it adds no JavaScript,
-asset-pipeline, or frontend-package dependency. Unused mail, storage, jobs,
-realtime features, and deployment tooling were skipped.
-
-The domain includes providers, clients, enrollments, and client-owned journal
-entries. Enrollments connect providers and clients with a `basic` or `premium`
-plan. Enrollments preserve relationship history using start/end timestamps, with
-only one active enrollment per provider/client pair. Providers and clients can be
-deactivated, and restrictive associations and foreign keys protect enrollments and
-journal entries from accidental parent deletion. See
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the complete schema and design
-rationale, and [AGENTS.md](AGENTS.md) for development guidance.
 
 ## Seed data
 
@@ -180,6 +165,23 @@ or filters the client's entries. The provider journal-entry query includes entri
 for a client only while that client is currently enrolled with that provider. The
 active-enrollment unique index guarantees one join row per provider/client pair,
 so the query has no duplicate entries without an association-level `DISTINCT`.
+
+## Architecture and next steps
+
+The application uses conventional Rails controller and view support for the
+read-only explorer while retaining conventional ActiveRecord structure. The small
+amount of explorer CSS lives in the application layout, so it adds no JavaScript,
+asset-pipeline, or frontend-package dependency. Unused mail, storage, jobs,
+realtime features, and deployment tooling were skipped.
+
+The domain includes providers, clients, enrollments, and client-owned journal
+entries. Enrollments connect providers and clients with a `basic` or `premium`
+plan. Enrollments preserve relationship history using start/end timestamps, with
+only one active enrollment per provider/client pair. Providers and clients can be
+deactivated, and restrictive associations and foreign keys protect enrollments and
+journal entries from accidental parent deletion. See
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the complete schema and design
+rationale, and [AGENTS.md](AGENTS.md) for development guidance.
 
 ## Known limitations
 
