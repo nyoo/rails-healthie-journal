@@ -56,34 +56,17 @@ bin/rails test
 The server listens at `http://localhost:3000`. The read-only explorer is available
 at `http://localhost:3000/`, with navigation to providers, clients, enrollments,
 and journal entries. It uses server-rendered Rails views and intentionally has no
-create, update, or delete actions. Verify boot using Rails' generated health route:
+create, update, or delete actions. Start the server and open
+`http://localhost:3000/` to browse the seeded data:
 
 ```sh
-curl --fail http://localhost:3000/up
+bin/rails server
 ```
 
-There is no application root route. `/up` checks application boot, not database
-connectivity.
+`/up` remains Rails' generated boot health check; it does not query the database.
 
-If port 3000 is occupied, run `bin/rails server -p 3001` and check
-`http://localhost:3001/up`. The initial bootstrap was verified on port 3001.
-
-## Architecture and next steps
-
-The application uses conventional Rails controller and view support for the
-read-only explorer while retaining conventional ActiveRecord structure. The small
-amount of explorer CSS lives in the application layout, so it adds no JavaScript,
-asset-pipeline, or frontend-package dependency. Unused mail, storage, jobs,
-realtime features, and deployment tooling were skipped.
-
-The domain includes providers, clients, enrollments, and client-owned journal
-entries. Enrollments connect providers and clients with a `basic` or `premium`
-plan. Enrollments preserve relationship history using start/end timestamps, with
-only one active enrollment per provider/client pair. Providers and clients can be
-deactivated, and restrictive associations and foreign keys protect enrollments and
-journal entries from accidental parent deletion. See
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the complete schema and design
-rationale, and [AGENTS.md](AGENTS.md) for development guidance.
+If port 3000 is occupied, run `bin/rails server -p 3001` and open
+`http://localhost:3001/` instead.
 
 ## Seed data
 
@@ -180,6 +163,23 @@ or filters the client's entries. The provider journal-entry query includes entri
 for a client only while that client is currently enrolled with that provider. The
 active-enrollment unique index guarantees one join row per provider/client pair,
 so the query has no duplicate entries without an association-level `DISTINCT`.
+
+## Architecture and next steps
+
+The application uses conventional Rails controller and view support for the
+read-only explorer while retaining conventional ActiveRecord structure. The small
+amount of explorer CSS lives in the application layout, so it adds no JavaScript,
+asset-pipeline, or frontend-package dependency. Unused mail, storage, jobs,
+realtime features, and deployment tooling were skipped.
+
+The domain includes providers, clients, enrollments, and client-owned journal
+entries. Enrollments connect providers and clients with a `basic` or `premium`
+plan. Enrollments preserve relationship history using start/end timestamps, with
+only one active enrollment per provider/client pair. Providers and clients can be
+deactivated, and restrictive associations and foreign keys protect enrollments and
+journal entries from accidental parent deletion. See
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the complete schema and design
+rationale, and [AGENTS.md](AGENTS.md) for development guidance.
 
 ## Known limitations
 
