@@ -1,0 +1,48 @@
+<h1><%= @client.name %></h1>
+<p><strong>Email:</strong> <%= @client.email %></p>
+<p><strong>Account Status:</strong> <span class="status <%= @client.active? ? "active" : "inactive" %>"><%= account_status(@client) %></span></p>
+
+<h2>Current Providers</h2>
+<% if @client.current_providers.any? %>
+  <ul>
+    <% @client.current_providers.order(:name, :id).each do |provider| %>
+      <li><%= link_to provider.name, provider %> (<%= provider.email %>)</li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="empty">No current providers.</p>
+<% end %>
+
+<h2>Enrollment History</h2>
+<table>
+  <thead><tr><th>Provider</th><th>Plan</th><th>Enrollment Status</th><th>Started</th><th>Ended</th></tr></thead>
+  <tbody>
+    <% @enrollments.each do |enrollment| %>
+      <tr>
+        <td><%= link_to enrollment.provider.name, enrollment.provider %></td>
+        <td><%= link_to enrollment.plan, enrollment %></td>
+        <td><span class="status <%= enrollment.active? ? "active" : "ended" %>"><%= enrollment.active? ? "Active" : "Ended" %></span></td>
+        <td><%= format_timestamp(enrollment.started_at) %></td>
+        <td><%= format_timestamp(enrollment.ended_at) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<h2>Journal Entries</h2>
+<% if @journal_entries.any? %>
+  <table>
+    <thead><tr><th>Entry</th><th>Created</th><th>Updated</th></tr></thead>
+    <tbody>
+      <% @journal_entries.each do |entry| %>
+        <tr>
+          <td><%= link_to entry.content, entry %></td>
+          <td><%= format_timestamp(entry.created_at) %></td>
+          <td><%= format_timestamp(entry.updated_at) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p class="empty">No journal entries.</p>
+<% end %>

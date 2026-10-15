@@ -1,0 +1,16 @@
+<h1>Enrollment #<%= @enrollment.id %></h1>
+
+<dl>
+  <dt>Provider</dt>
+  <dd><%= link_to @enrollment.provider.name, @enrollment.provider %> (<%= @enrollment.provider.email %>)</dd>
+  <dt>Client</dt>
+  <dd><%= link_to @enrollment.client.name, @enrollment.client %> (<%= @enrollment.client.email %>)</dd>
+  <dt>Plan</dt>
+  <dd><%= @enrollment.plan %></dd>
+  <dt>Enrollment Status</dt>
+  <dd><span class="status <%= @enrollment.active? ? "active" : "ended" %>"><%= @enrollment.active? ? "Active" : "Ended" %></span></dd>
+  <dt>Started</dt>
+  <dd><%= format_timestamp(@enrollment.started_at) %></dd>
+  <dt>Ended</dt>
+  <dd><%= format_timestamp(@enrollment.ended_at) %></dd>
+</dl>

@@ -1,0 +1,18 @@
+<h1>Enrollments</h1>
+
+<table>
+  <thead><tr><th>ID</th><th>Provider</th><th>Client</th><th>Plan</th><th>Enrollment Status</th><th>Started</th><th>Ended</th></tr></thead>
+  <tbody>
+    <% @enrollments.each do |enrollment| %>
+      <tr>
+        <td><%= link_to enrollment.id, enrollment %></td>
+        <td><%= link_to enrollment.provider.name, enrollment.provider %></td>
+        <td><%= link_to enrollment.client.name, enrollment.client %></td>
+        <td><%= enrollment.plan %></td>
+        <td><span class="status <%= enrollment.active? ? "active" : "ended" %>"><%= enrollment.active? ? "Active" : "Ended" %></span></td>
+        <td><%= format_timestamp(enrollment.started_at) %></td>
+        <td><%= format_timestamp(enrollment.ended_at) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
