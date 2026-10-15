@@ -93,6 +93,22 @@ her Cleveland enrollment ended. Erin Patel has an open Cleveland enrollment and
 a deactivated account to demonstrate that account status is separate from
 enrollment status.
 
+## Implemented models
+
+All domain models include `id`, `created_at`, and `updated_at`.
+
+| Model | Domain fields | Relationships | Implemented behavior |
+| --- | --- | --- | --- |
+| [Provider](app/models/provider.rb) | `name`, `email`, `deactivated_at` | Has many enrollments and clients; accesses journal entries through clients. | Requires name and email; supports active accounts, current clients, and journal entries for currently enrolled clients. |
+| [Client](app/models/client.rb) | `name`, `email`, `deactivated_at` | Has many enrollments, providers, and client-owned journal entries. | Requires name and email; supports active accounts and current providers. |
+| [Enrollment](app/models/enrollment.rb) | `provider_id`, `client_id`, `plan`, `started_at`, `ended_at` | Belongs to a provider and a client. | Supports `basic` and `premium` plans; defaults start time to now; requires a plan and start time; prevents end times before start times and multiple active enrollments for the same pair. |
+| [JournalEntry](app/models/journal_entry.rb) | `client_id`, `content` | Belongs to a client. | Requires content; provides deterministic newest-first ordering with `recent_first`. |
+
+Accounts are active when `deactivated_at` is `nil`; enrollments are active when
+`ended_at` is `nil`. These statuses are independent. Restrictive associations and
+foreign keys prevent deleting providers or clients that still have dependent
+records. `ApplicationRecord` is the abstract base class for all four models.
+
 ## ActiveRecord query examples
 
 After seeding, in `bin/rails console`, load the named records and use the
