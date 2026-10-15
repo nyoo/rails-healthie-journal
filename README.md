@@ -140,6 +140,40 @@ carol.current_providers # => []
 carol.journal_entries.recent_first
 ```
 
+For concise, deterministic console output without database-specific IDs, use these
+projections after running the queries above:
+
+```ruby
+kaiser.current_clients.order(:name).map(&:name)
+# => ["Alice Nguyen", "Bob Martinez", "Devon Lee"]
+
+alice.current_providers.order(:name).map(&:name)
+# => ["Kaiser Permanente", "Mayo Clinic"]
+
+carol.journal_entries.recent_first.pluck(:content)
+# => ["Entry written after enrollment ended.", "Entry written while enrolled."]
+
+kaiser.current_client_journal_entries.recent_first.pluck(:content)
+# => ["Energy has improved this week.", "Returning to care with a new plan.",
+#     "Completed my first week of tracking.", "Started a new nutrition plan."]
+
+Enrollment.where(provider: kaiser, client: bob).order(:started_at).map do |enrollment|
+  [enrollment.plan, enrollment.started_at.iso8601, enrollment.ended_at&.iso8601]
+end
+# => [["basic", "2026-02-01T09:00:00Z", "2026-04-30T17:00:00Z"],
+#     ["premium", "2026-06-01T09:00:00Z", nil]]
+
+Enrollment.where(provider: kaiser, client: bob).where.not(ended_at: nil).map do |enrollment|
+  [enrollment.plan, enrollment.started_at.iso8601, enrollment.ended_at.iso8601]
+end
+# => [["basic", "2026-02-01T09:00:00Z", "2026-04-30T17:00:00Z"]]
+
+carol.current_providers.order(:name).map(&:name)
+# => []
+carol.journal_entries.recent_first.pluck(:content)
+# => ["Entry written after enrollment ended.", "Entry written while enrolled."]
+```
+
 `current_clients` and `current_providers` use only enrollments where `ended_at`
 is `nil`. Journal entries are client-owned, so ending an enrollment never removes
 or filters the client's entries. The provider journal-entry query includes entries
