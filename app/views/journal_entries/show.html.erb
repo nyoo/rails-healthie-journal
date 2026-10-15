@@ -1,0 +1,8 @@
+<h1>Journal Entry #<%= @journal_entry.id %></h1>
+
+<p><strong>Client:</strong> <%= link_to @journal_entry.client.name, @journal_entry.client %></p>
+<p><strong>Created:</strong> <%= format_timestamp(@journal_entry.created_at) %></p>
+<p><strong>Updated:</strong> <%= format_timestamp(@journal_entry.updated_at) %></p>
+
+<h2>Content</h2>
+<div class="content"><%= @journal_entry.content %></div>

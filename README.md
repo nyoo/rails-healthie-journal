@@ -2,8 +2,8 @@
 
 A minimal Rails foundation for Healthie full-stack engineering pairing interview
 preparation. It provides ActiveRecord, PostgreSQL, Minitest, the interview's core
-domain schema and query methods, and a small deterministic development dataset.
-No application endpoints exist yet.
+domain schema and query methods, a small deterministic development dataset, and a
+read-only browser explorer for demonstrating the model relationships.
 
 ## Prerequisites
 
@@ -53,8 +53,10 @@ bin/rails console
 bin/rails test
 ```
 
-The server listens at `http://localhost:3000`. Verify boot using Rails' generated
-health route:
+The server listens at `http://localhost:3000`. The read-only explorer is available
+at `http://localhost:3000/`, with navigation to providers, clients, enrollments,
+and journal entries. It uses server-rendered Rails views and intentionally has no
+create, update, or delete actions. Verify boot using Rails' generated health route:
 
 ```sh
 curl --fail http://localhost:3000/up
@@ -68,10 +70,11 @@ If port 3000 is occupied, run `bin/rails server -p 3001` and check
 
 ## Architecture and next steps
 
-The application uses Rails' API-only mode to omit browser assets and session
-middleware while retaining conventional Rails and ActiveRecord structure.
-Browser UI work would require adding that support later. Unused mail, storage,
-jobs, realtime features, and deployment tooling were skipped.
+The application uses conventional Rails controller and view support for the
+read-only explorer while retaining conventional ActiveRecord structure. The small
+amount of explorer CSS lives in the application layout, so it adds no JavaScript,
+asset-pipeline, or frontend-package dependency. Unused mail, storage, jobs,
+realtime features, and deployment tooling were skipped.
 
 The domain includes providers, clients, enrollments, and client-owned journal
 entries. Enrollments connect providers and clients with a `basic` or `premium`
@@ -101,8 +104,8 @@ clients; both plans; active and ended enrollments; and journal entries spanning
 the relationship history. Alice Nguyen is active with both Kaiser and Mayo. Bob
 Martinez has an ended Kaiser enrollment followed by a newer active enrollment.
 Carol Johnson has no active providers but retains entries from before and after
-her Cleveland enrollment ended. Erin Patel has an active Cleveland enrollment
-and is deactivated to demonstrate that participant status is separate from
+her Cleveland enrollment ended. Erin Patel has an open Cleveland enrollment and
+a deactivated account to demonstrate that account status is separate from
 enrollment status.
 
 ## ActiveRecord query examples
@@ -146,8 +149,9 @@ so the query has no duplicate entries without an association-level `DISTINCT`.
 
 ## Known limitations
 
-This is a pairing-exercise foundation: it has no endpoints, authentication, or
-authorization policy. It intentionally does not implement healthcare retention or
-deletion workflows, audit logging, pagination, background processing, or production
-performance tuning. Historical enrollment records are preserved, but access to
-historical journal data must be authorized by a future application layer.
+This is a pairing-exercise foundation: the explorer has only read-only endpoints
+and no authentication or authorization policy. It intentionally does not implement
+healthcare retention or deletion workflows, audit logging, pagination, background
+processing, or production performance tuning. Historical enrollment records are
+preserved, but access to historical journal data must be authorized by a future
+application layer.

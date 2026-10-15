@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Healthie Journal Explorer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      body { color: #1f2933; font-family: system-ui, sans-serif; line-height: 1.5; margin: 0; }
+      header { background: #173f5f; color: white; padding: 1rem 2rem; }
+      header a { color: white; margin-right: 1.25rem; text-decoration: none; }
+      main { margin: 0 auto; max-width: 1100px; padding: 2rem; }
+      table { border-collapse: collapse; margin: 1rem 0 2rem; width: 100%; }
+      th, td { border-bottom: 1px solid #d9e2ec; padding: .65rem; text-align: left; vertical-align: top; }
+      th { background: #f0f4f8; }
+      .status { border-radius: 1rem; display: inline-block; font-size: .85rem; padding: .15rem .6rem; }
+      .active { background: #d9fbe8; color: #146c43; }
+      .inactive, .ended { background: #fce8e6; color: #a61b1b; }
+      .empty { color: #627d98; font-style: italic; }
+      .content { white-space: pre-wrap; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <strong>Healthie Journal Explorer</strong>
+      <nav aria-label="Primary navigation">
+        <%= link_to "Providers", providers_path %>
+        <%= link_to "Clients", clients_path %>
+        <%= link_to "Enrollments", enrollments_path %>
+        <%= link_to "Journal Entries", journal_entries_path %>
+      </nav>
+    </header>
+    <main>
+      <%= yield %>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,30 @@
+<h1><%= @provider.name %></h1>
+<p><strong>Email:</strong> <%= @provider.email %></p>
+<p><strong>Account Status:</strong> <span class="status <%= @provider.active? ? "active" : "inactive" %>"><%= account_status(@provider) %></span></p>
+
+<h2>Current Clients</h2>
+<% if @provider.current_clients.any? %>
+  <ul>
+    <% @provider.current_clients.order(:name, :id).each do |client| %>
+      <li><%= link_to client.name, client %> (<%= client.email %>)</li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="empty">No current clients.</p>
+<% end %>
+
+<h2>Enrollment History</h2>
+<table>
+  <thead><tr><th>Client</th><th>Plan</th><th>Enrollment Status</th><th>Started</th><th>Ended</th></tr></thead>
+  <tbody>
+    <% @enrollments.each do |enrollment| %>
+      <tr>
+        <td><%= link_to enrollment.client.name, enrollment.client %></td>
+        <td><%= link_to enrollment.plan, enrollment %></td>
+        <td><span class="status <%= enrollment.active? ? "active" : "ended" %>"><%= enrollment.active? ? "Active" : "Ended" %></span></td>
+        <td><%= format_timestamp(enrollment.started_at) %></td>
+        <td><%= format_timestamp(enrollment.ended_at) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

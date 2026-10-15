@@ -7,10 +7,14 @@ The project uses Ruby 3.4.11 and Rails 8.1.4 with conventional `app/`, `config/`
 `ApplicationRecord` is its generated abstract base class. Minitest provides the
 standard Rails testing harness. Puma serves HTTP requests.
 
-API-only mode keeps the foundation small by omitting asset tooling, views, and
-browser session middleware. It does not introduce application APIs. Browser UI
-work would require adding the relevant Rails facilities later. The only explicit
-route is Rails' generated `/up` boot health check, which does not query the database.
+The application enables conventional Rails controller and view support for a small,
+read-only data explorer. `ApplicationController` inherits from
+`ActionController::Base`, and the explorer exposes only index and show routes for
+providers, clients, enrollments, and journal entries; the root route lists
+providers. It does not introduce application APIs or mutation endpoints. The
+layout contains the explorer's small amount of CSS, avoiding asset-pipeline and
+frontend-package dependencies. Rails' generated `/up` boot health check remains
+available and does not query the database.
 
 ## PostgreSQL
 
@@ -137,6 +141,10 @@ provider, client, and start time, and journal entries by client, content, and
 timestamp. Re-running it preserves historical rows and does not delete existing
 application data.
 
-Controllers and endpoints remain out of scope. Mail, file storage, background
-jobs, realtime features, frontend frameworks, and deployment tooling also remain
-out of scope for this exercise.
+The data explorer loads its relationships through the existing ActiveRecord
+associations and scopes: current participants use `current_clients` and
+`current_providers`, enrollment history uses `enrollments`, and journal entries use
+`recent_first`. It intentionally has no editing actions, custom query console,
+authentication, or authorization policy. Mail, file storage, background jobs,
+realtime features, frontend frameworks, and deployment tooling also remain out of
+scope for this exercise.

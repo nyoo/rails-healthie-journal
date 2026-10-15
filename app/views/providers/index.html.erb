@@ -1,0 +1,16 @@
+<h1>Providers</h1>
+
+<table>
+  <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Account Status</th><th>Created</th></tr></thead>
+  <tbody>
+    <% @providers.each do |provider| %>
+      <tr>
+        <td><%= provider.id %></td>
+        <td><%= link_to provider.name, provider %></td>
+        <td><%= provider.email %></td>
+        <td><span class="status <%= provider.active? ? "active" : "inactive" %>"><%= account_status(provider) %></span></td>
+        <td><%= format_timestamp(provider.created_at) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

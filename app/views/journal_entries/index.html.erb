@@ -1,0 +1,16 @@
+<h1>Journal Entries</h1>
+
+<table>
+  <thead><tr><th>ID</th><th>Client</th><th>Content</th><th>Created</th><th>Updated</th></tr></thead>
+  <tbody>
+    <% @journal_entries.each do |entry| %>
+      <tr>
+        <td><%= link_to entry.id, entry %></td>
+        <td><%= link_to entry.client.name, entry.client %></td>
+        <td><%= link_to entry.content, entry %></td>
+        <td><%= format_timestamp(entry.created_at) %></td>
+        <td><%= format_timestamp(entry.updated_at) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

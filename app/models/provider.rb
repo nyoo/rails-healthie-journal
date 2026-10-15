@@ -10,4 +10,8 @@ class Provider < ApplicationRecord
   scope :active, -> { where(deactivated_at: nil) }
 
   validates :name, :email, presence: true
+
+  def active?
+    deactivated_at.nil?
+  end
 end
